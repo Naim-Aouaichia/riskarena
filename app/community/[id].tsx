@@ -1,11 +1,75 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ResizeMode, Video } from 'expo-av';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { default as React, useState } from 'react';
+import { Dimensions, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { Button } from 'react-native-paper';
+
+const screenWidth = Dimensions.get('window').width;
+const screenDefaultRatio = screenWidth / (screenWidth * 0.5625); // ratio 16:9 par défaut
+const [videoRatio, setVideoRatio] = useState(screenDefaultRatio);
+
+type Post = {
+  id: string;
+  type: 'text' | 'image' | 'video';
+  content: string;     // URL de l'image ou vidéo, ou texte si type text
+  text?: string;       // texte optionnel à afficher sous la media
+  likes: number;
+  comments: number;
+  createdAt: string;
+};
+
+const MOCK_POSTS: Post[] = [
+  {
+    id: '1',
+    type: 'image',
+    content: 'https://picsum.photos/600/400',
+    text: "Super but marqué hier par CR7 ! 🚀",
+    likes: 128,
+    comments: 32,
+    createdAt: '2025-07-11T15:00:00Z',
+  },
+  {
+    id: '2',
+    type: 'video',
+    content: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+    text: "Revivez les temps forts du match 📹",
+    likes: 256,
+    comments: 85,
+    createdAt: '2025-07-12T11:00:00Z',
+  },
+  {
+    id: '3',
+    type: 'image',
+    content: 'https://picsum.photos/800/500',
+    text: "Moment convivial avec les fans !",
+    likes: 92,
+    comments: 14,
+    createdAt: '2025-07-12T13:30:00Z',
+  },
+  {
+    id: '4',
+    type: 'text',
+    content: "Merci à tous pour votre incroyable soutien ! 🙏",
+    text: undefined,
+    likes: 47,
+    comments: 9,
+    createdAt: '2025-07-12T14:45:00Z',
+  },
+  {
+    id: '5',
+    type: 'image',
+    content: 'https://picsum.photos/700/300',
+    text: "Échauffement avant le grand match 🏆",
+    likes: 183,
+    comments: 27,
+    createdAt: '2025-07-12T16:00:00Z',
+  },
+];
+
 const dummyData = {
   name: "CR7",
   description: "La communauté officielle autour de Ronaldo...",
@@ -24,22 +88,55 @@ export default function CommunityPage() {
   const renderTabContent = () => {
     if (tab === 'Community') {
       return (
-        <>
-          <ThemedView style={styles.infoRow}>
-            <ThemedView style={styles.infoBox}>
-              <ThemedText type="defaultSemiBold" style={styles.whiteText}>Membres</ThemedText>
-              <ThemedText style={styles.whiteText}>{dummyData.members}</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.infoBox}>
-              <ThemedText type="defaultSemiBold" style={styles.whiteText}>Token</ThemedText>
-              <ThemedText style={styles.whiteText}>{dummyData.tokenSymbol}</ThemedText>
-            </ThemedView>
-          </ThemedView>
-          <ThemedView style={styles.descriptionBox}>
-            <ThemedText style={styles.whiteText}>{dummyData.description}</ThemedText>
-          </ThemedView>
-          
-        </>
+  <>
+  {/* Stats existantes */}
+  <ThemedView style={styles.infoRow}>…</ThemedView>
+
+  {/* Le feed */}
+  <FlatList
+    data={MOCK_POSTS}
+    keyExtractor={item => item.id}
+    style={{ marginTop: 16 }}
+    renderItem={({ item }) => (
+      <ThemedView style={styles.postCard}>
+        <ThemedText type="defaultSemiBold" style={styles.postTime}>
+          {new Date(item.createdAt).toLocaleString()}
+        </ThemedText>
+
+        {/* Texte (s’il existe ou si post type text) */}
+        {item.text && (
+          <ThemedText style={styles.postText}>{item.text}</ThemedText>
+        )}
+        {!item.text && item.type === 'text' && (
+          <ThemedText style={styles.postText}>{item.content}</ThemedText>
+        )}
+
+        {/* Média */}
+        {item.type === 'image' && (
+          <Image source={{ uri: item.content }} style={styles.postMedia} contentFit="cover" />
+        )}
+        {item.type === 'video' && (
+          <Video
+            source={{ uri: item.content }}
+            style={styles.postMedia}
+            useNativeControls
+            resizeMode={ResizeMode.CONTAIN}
+          />
+        )}
+
+        {/* Actions */}
+        <View style={styles.actionsRow}>
+          <TouchableOpacity>
+            <ThemedText style={styles.actionText}>❤️ {item.likes}</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <ThemedText style={styles.actionText}>💬 {item.comments}</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+    )}
+  />
+</>
       );
     }
     if (tab === 'Calendar') {
@@ -54,7 +151,11 @@ export default function CommunityPage() {
     if (tab === 'Map') {
       return (
         <View style={styles.mapContainer}>
-          {/* Intégrer MapView ou autre */}
+          <Image
+            source={require('@/assets/images/map.png')}
+            style={styles.mapImage}
+            contentFit="cover"
+          />
         </View>
       );
     }
@@ -84,9 +185,9 @@ export default function CommunityPage() {
         <ThemedText type="title" style={styles.title}>{dummyData.name}</ThemedText>
         <Image source={dummyData.image} style={styles.image} contentFit="cover" />
 
-<Button mode="contained" onPress={() => { }} style={styles.joinButton}>
-            JOIN COMMUNITY
-          </Button>
+        <Button mode="contained" onPress={() => { }} style={styles.joinButton}>
+          JOIN COMMUNITY
+        </Button>
 
         <View style={styles.tabRow}>
           {['Community', 'Calendar', 'Map', 'LevelBoard'].map(t => (
@@ -119,7 +220,11 @@ const styles = StyleSheet.create({
   tabText: { color: '#888' },
   tabTextActive: { color: '#fff', fontWeight: 'bold' },
   tabContent: { padding: 12, backgroundColor: '#1e1e1e', borderRadius: 12, marginBottom: 16 },
-  mapContainer: { height: 200, borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
+  mapContainer: { width: '100%', height: '100%', borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
+  mapImage: {
+    width: '100%',
+    height: '100%',
+  },
   levelRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#333'
@@ -134,4 +239,37 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 24,
   },
+  postCard: {
+    backgroundColor: '#1e1e1e',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  postTime: {
+    color: '#888',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  postText: {
+    color: 'white',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  postMedia: {
+    width: '100%',
+    aspectRatio: 16 / 9, // format paysage par défaut ; tu peux spécifier 1 pour carré, ou laisser responsif
+    borderRadius: 8,
+    backgroundColor: '#000',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 4,
+  },
+  actionText: {
+    color: '#FFD700',
+    fontWeight: 'bold',
+  },
+  
+    
 });
