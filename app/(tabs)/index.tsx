@@ -1,75 +1,120 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TextInput } from 'react-native-paper';
+
+const conversations = [
+  {
+    id: '1',
+    name: 'Alice Dupont',
+    lastMessage: 'Salut, tu viens au match ce soir ?',
+    avatar: require('@/assets/images/9.png'),
+    isRead: false,
+  },
+  {
+    id: '2',
+    name: 'Maxime Leroy',
+    lastMessage: 'Pas de souci pour demain !',
+    avatar: require('@/assets/images/partial-react-logo.png'),
+    isRead: true,
+  },
+  {
+    id: '3',
+    name: 'Sophie Lemoine',
+    lastMessage: 'Voici le lien pour les billets.',
+    avatar: require('@/assets/images/9.png'),
+    isRead: false,
+  },
+];
 
 export default function HomeScreen() {
+  const [search, setSearch] = useState('');
+  const router = useRouter();
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <ThemedView style={styles.container}>
+      <TextInput
+        mode="outlined"
+        placeholder="Rechercher une conversation"
+        value={search}
+        onChangeText={setSearch}
+        style={styles.searchBar}
+        theme={{ colors: { primary: '#007aff', text: '#000' } }}
+      />
+
+      <FlatList
+        data={conversations.filter((c) =>
+          c.name.toLowerCase().includes(search.toLowerCase())
+        )}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.conversationRow}
+            onPress={() => router.push(`/converse/${item.id}`)}
+          >
+            <Image source={item.avatar} style={styles.avatar} />
+            <View style={styles.conversationTextContainer}>
+              <ThemedText type="defaultSemiBold" style={styles.name}>{item.name}</ThemedText>
+              <ThemedText numberOfLines={1} style={styles.message}>{item.lastMessage}</ThemedText>
+            </View>
+            <View
+              style={[
+                styles.readIndicator,
+                {
+                  backgroundColor: item.isRead ? 'transparent' : '#007aff',
+                  borderWidth: item.isRead ? 1 : 0,
+                  borderColor: '#007aff',
+                },
+              ]}
+            />
+          </TouchableOpacity>
+        )}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    paddingTop: 60,
+    paddingHorizontal: 16,
+  },
+  searchBar: {
+    marginBottom: 16,
+  },
+  conversationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  conversationTextContainer: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 16,
+    marginBottom: 2,
+  },
+  message: {
+    fontSize: 14,
+    color: '#666',
+  },
+  readIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginLeft: 8,
   },
 });
