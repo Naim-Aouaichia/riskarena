@@ -1,7 +1,9 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import "@thirdweb-dev/react-native-adapter";
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import "expo-router/entry";
 import { useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { TextInput } from 'react-native-paper';

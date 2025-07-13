@@ -1,28 +1,41 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { login } from '@/services/api';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Button, TextInput } from 'react-native-paper';
+import { useState } from 'react';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TextInput } from 'react-native-paper';
 
-export default function LoginScreen() {
+import { ConnectButton, useActiveAccount, useConnect } from "thirdweb/react";
+import { inAppWallet } from "thirdweb/wallets";
+
+// Initialize a wallet
+const wallet = inAppWallet();
+
+export async function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    setLoading(true);
-    try {
-      await login(email, password);
-      router.replace('/discover');
-    } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Échec de la connexion');
-    } finally {
-      setLoading(false);
-    }
+
+  const { connect } = useConnect();
+  const account = useActiveAccount();
+  console.log("connected to", account?.address);
+ 
+
+  var client =  { clientId: "4204fddef7ed6f12fb31235c768b925d" , secretKey: "l3MKeeufrHB7Zh39cLR19R9155bWIT48u4vi8bVMjjYI-8EajpUBEU2V6sUjRxxapSPNz9d32Rcd_b6QgQbiuw" }
+
+  const onClick = () => {
+    connect(async () => {
+      await wallet.connect({
+        client, // your thirdweb client
+        strategy: "google", // or any other auth strategy
+      });
+      return wallet;
+    });
   };
+
+
 
   return (
     <ThemedView style={styles.container}>
@@ -55,16 +68,12 @@ export default function LoginScreen() {
         theme={{ colors: { primary: '#FFD700', background: '#1e1e1e', text: 'white' } }}
       />
 
-      <Button
-        mode="contained"
-        onPress={handleLogin}
-        loading={loading}
-        disabled={loading || !email || !password}
-        style={styles.loginButton}
-        contentStyle={styles.loginButtonContent}
-      >
-        Se connecter
-      </Button>
+
+
+    <View>
+      <ConnectButton client={client} />
+    </View>
+
 
       <TouchableOpacity onPress={() => router.push('/forgot-password')}>
         <ThemedText style={styles.linkText}>Mot de passe oublié ?</ThemedText>
