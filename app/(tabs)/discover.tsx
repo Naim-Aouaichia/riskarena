@@ -30,10 +30,10 @@ export default function TabTwoScreen() {
       onPress={() => router.push(`/community/${item.id}`)}
     >
       
-      <Image source={ require(`@/assets/images/cr7.jpg`)  } style={styles.image} />
+      <Image source={ { uri: item.image } } style={styles.image} />
       <ThemedView style={styles.info}>
-        <ThemedText type="subtitle">{item.name}</ThemedText>
-        <ThemedText>{item.description}</ThemedText>
+        <ThemedText style={styles.titleCom} type="subtitle">{item.name}</ThemedText>
+        <ThemedText style={styles.Descr}>{item.description}</ThemedText>
       </ThemedView>
     </TouchableOpacity>
   );
@@ -104,6 +104,8 @@ const styles = StyleSheet.create({
   },
   info: {
     flex: 1,
+    color: 'black',
+    backgroundColor: 'none',
   },
   reactLogo: {
     height: '100%',
@@ -130,6 +132,12 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: 14,
     fontWeight: 'bold',
+    color: '#000',
+  },
+  titleCom: {
+    color: '#000',
+  },
+  Descr: {
     color: '#000',
   },
 });
